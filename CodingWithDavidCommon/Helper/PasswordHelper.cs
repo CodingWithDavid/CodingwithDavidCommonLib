@@ -1,6 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
+namespace CodingWithDavid.Common;
 
+/// <summary>Provides password validation helpers.</summary>
 public class PasswordHelper
 {
     /// <summary>

@@ -1,5 +1,8 @@
 ﻿using System.Security.Cryptography;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Generates cryptographically random passwords.</summary>
 public class RandomPassword
 {
     private const int DEFAULT_MIN_PASSWORD_LENGTH = 8;
@@ -37,94 +40,26 @@ public class RandomPassword
     /// <returns>New password</returns>
     public static string? Generate(int minLength, int maxLength)
     {
-        if (minLength <= 0 || maxLength <= 0 || minLength > maxLength)
+        if (minLength < 4 || maxLength < 4 || minLength > maxLength)
             return null;
 
-        char[][] charGroups = new char[][]
+        string[] groups = { PASSWORD_CHARS_LCASE, PASSWORD_CHARS_UCASE, PASSWORD_CHARS_NUMERIC, PASSWORD_CHARS_SPECIAL };
+        int length = RandomNumberGenerator.GetInt32(minLength, maxLength + 1);
+        char[] password = new char[length];
+
+        for (int i = 0; i < groups.Length; i++)
+            password[i] = groups[i][RandomNumberGenerator.GetInt32(groups[i].Length)];
+
+        string allCharacters = string.Concat(groups);
+        for (int i = groups.Length; i < password.Length; i++)
+            password[i] = allCharacters[RandomNumberGenerator.GetInt32(allCharacters.Length)];
+
+        for (int i = password.Length - 1; i > 0; i--)
         {
-                PASSWORD_CHARS_LCASE.ToCharArray(),
-                PASSWORD_CHARS_UCASE.ToCharArray(),
-                PASSWORD_CHARS_NUMERIC.ToCharArray(),
-                PASSWORD_CHARS_SPECIAL.ToCharArray()
-        };
-
-        int[] charsLeftInGroup = new int[charGroups.Length];
-
-        for (int i = 0; i < charsLeftInGroup.Length; i++)
-            charsLeftInGroup[i] = charGroups[i].Length;
-
-        int[] leftGroupsOrder = new int[charGroups.Length];
-
-        for (int i = 0; i < leftGroupsOrder.Length; i++)
-            leftGroupsOrder[i] = i;
-
-        byte[] randomBytes = new byte[4];
-
-#pragma warning disable SYSLIB0023 // Type or member is obsolete
-        RNGCryptoServiceProvider rng = new();
-#pragma warning restore SYSLIB0023 // Type or member is obsolete
-        rng.GetBytes(randomBytes);
-
-        int seed = (randomBytes[0] & 0x7f) << 24 |
-                    randomBytes[1] << 16 |
-                    randomBytes[2] << 8 |
-                    randomBytes[3];
-
-        Random random = new(seed);
-
-        char[]? password;
-        if (minLength < maxLength)
-            password = new char[random.Next(minLength, maxLength + 1)];
-        else
-            password = new char[minLength];
-
-        int nextCharIdx;
-        int nextGroupIdx;
-        int nextLeftGroupsOrderIdx;
-        int lastCharIdx;
-
-        int lastLeftGroupsOrderIdx = leftGroupsOrder.Length - 1;
-
-        for (int i = 0; i < password.Length; i++)
-        {
-            if (lastLeftGroupsOrderIdx == 0)
-                nextLeftGroupsOrderIdx = 0;
-            else
-                nextLeftGroupsOrderIdx = random.Next(0, lastLeftGroupsOrderIdx);
-
-            nextGroupIdx = leftGroupsOrder[nextLeftGroupsOrderIdx];
-
-            lastCharIdx = charsLeftInGroup[nextGroupIdx] - 1;
-
-            if (lastCharIdx == 0)
-                nextCharIdx = 0;
-            else
-                nextCharIdx = random.Next(0, lastCharIdx + 1);
-
-            password[i] = charGroups[nextGroupIdx][nextCharIdx];
-
-            if (lastCharIdx == 0)
-                charsLeftInGroup[nextGroupIdx] = charGroups[nextGroupIdx].Length;
-            else
-            {
-                if (lastCharIdx != nextCharIdx)
-                {
-                    (charGroups[nextGroupIdx][nextCharIdx], charGroups[nextGroupIdx][lastCharIdx]) = (charGroups[nextGroupIdx][lastCharIdx], charGroups[nextGroupIdx][nextCharIdx]);
-                }
-                charsLeftInGroup[nextGroupIdx]--;
-            }
-
-            if (lastLeftGroupsOrderIdx == 0)
-                lastLeftGroupsOrderIdx = leftGroupsOrder.Length - 1;
-            else
-            {
-                if (lastLeftGroupsOrderIdx != nextLeftGroupsOrderIdx)
-                {
-                    (leftGroupsOrder[nextLeftGroupsOrderIdx], leftGroupsOrder[lastLeftGroupsOrderIdx]) = (leftGroupsOrder[lastLeftGroupsOrderIdx], leftGroupsOrder[nextLeftGroupsOrderIdx]);
-                }
-                lastLeftGroupsOrderIdx--;
-            }
+            int swapIndex = RandomNumberGenerator.GetInt32(i + 1);
+            (password[i], password[swapIndex]) = (password[swapIndex], password[i]);
         }
+
         return new string(password);
     }
 
@@ -136,95 +71,26 @@ public class RandomPassword
     /// <returns>New password</returns>
     public static string? GenerateNoSpecialCharacators(int minLength, int maxLength)
     {
-        if (minLength <= 0 || maxLength <= 0 || minLength > maxLength)
+        if (minLength < 2 || maxLength < 2 || minLength > maxLength)
             return null;
 
-        char[][] charGroups = new char[][]
+        string[] groups = { PASSWORD_CHARS_UCASE, PASSWORD_CHARS_NUMERIC };
+        int length = RandomNumberGenerator.GetInt32(minLength, maxLength + 1);
+        char[] password = new char[length];
+
+        for (int i = 0; i < groups.Length; i++)
+            password[i] = groups[i][RandomNumberGenerator.GetInt32(groups[i].Length)];
+
+        string allCharacters = string.Concat(groups);
+        for (int i = groups.Length; i < password.Length; i++)
+            password[i] = allCharacters[RandomNumberGenerator.GetInt32(allCharacters.Length)];
+
+        for (int i = password.Length - 1; i > 0; i--)
         {
-                PASSWORD_CHARS_UCASE.ToCharArray(),
-                PASSWORD_CHARS_NUMERIC.ToCharArray()
-        };
-
-        int[] charsLeftInGroup = new int[charGroups.Length];
-
-        for (int i = 0; i < charsLeftInGroup.Length; i++)
-            charsLeftInGroup[i] = charGroups[i].Length;
-
-        int[] leftGroupsOrder = new int[charGroups.Length];
-
-        for (int i = 0; i < leftGroupsOrder.Length; i++)
-            leftGroupsOrder[i] = i;
-
-        byte[] randomBytes = new byte[4];
-
-#pragma warning disable SYSLIB0023 // Type or member is obsolete
-        RNGCryptoServiceProvider rng = new();
-#pragma warning restore SYSLIB0023 // Type or member is obsolete
-        rng.GetBytes(randomBytes);
-
-        int seed = (randomBytes[0] & 0x7f) << 24 |
-                    randomBytes[1] << 16 |
-                    randomBytes[2] << 8 |
-                    randomBytes[3];
-
-        Random random = new(seed);
-
-        char[]? password;
-        if (minLength < maxLength)
-            password = new char[random.Next(minLength, maxLength + 1)];
-        else
-            password = new char[minLength];
-
-        int nextCharIdx;
-
-        int nextGroupIdx;
-
-        int nextLeftGroupsOrderIdx;
-
-        int lastCharIdx;
-
-        int lastLeftGroupsOrderIdx = leftGroupsOrder.Length - 1;
-
-        for (int i = 0; i < password.Length; i++)
-        {
-            if (lastLeftGroupsOrderIdx == 0)
-                nextLeftGroupsOrderIdx = 0;
-            else
-                nextLeftGroupsOrderIdx = random.Next(0, lastLeftGroupsOrderIdx);
-
-            nextGroupIdx = leftGroupsOrder[nextLeftGroupsOrderIdx];
-
-            lastCharIdx = charsLeftInGroup[nextGroupIdx] - 1;
-
-            if (lastCharIdx == 0)
-                nextCharIdx = 0;
-            else
-                nextCharIdx = random.Next(0, lastCharIdx + 1);
-
-            password[i] = charGroups[nextGroupIdx][nextCharIdx];
-
-            if (lastCharIdx == 0)
-                charsLeftInGroup[nextGroupIdx] = charGroups[nextGroupIdx].Length;
-            else
-            {
-                if (lastCharIdx != nextCharIdx)
-                {
-                    (charGroups[nextGroupIdx][nextCharIdx], charGroups[nextGroupIdx][lastCharIdx]) = (charGroups[nextGroupIdx][lastCharIdx], charGroups[nextGroupIdx][nextCharIdx]);
-                }
-                charsLeftInGroup[nextGroupIdx]--;
-            }
-
-            if (lastLeftGroupsOrderIdx == 0)
-                lastLeftGroupsOrderIdx = leftGroupsOrder.Length - 1;
-            else
-            {
-                if (lastLeftGroupsOrderIdx != nextLeftGroupsOrderIdx)
-                {
-                    (leftGroupsOrder[nextLeftGroupsOrderIdx], leftGroupsOrder[lastLeftGroupsOrderIdx]) = (leftGroupsOrder[lastLeftGroupsOrderIdx], leftGroupsOrder[nextLeftGroupsOrderIdx]);
-                }
-                lastLeftGroupsOrderIdx--;
-            }
+            int swapIndex = RandomNumberGenerator.GetInt32(i + 1);
+            (password[i], password[swapIndex]) = (password[swapIndex], password[i]);
         }
+
         return new string(password);
     }
 }

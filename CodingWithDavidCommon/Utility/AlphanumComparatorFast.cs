@@ -1,5 +1,8 @@
 ﻿using System.Collections;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Compares strings using natural alphanumeric ordering.</summary>
 public class AlphanumComparatorFast : IComparer
 {
     /// <summary>

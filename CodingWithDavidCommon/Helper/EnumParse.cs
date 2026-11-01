@@ -2,7 +2,9 @@
 using System.ComponentModel;
 using System.Reflection;
 
+namespace CodingWithDavid.Common;
 
+/// <summary>Provides enum parsing and description lookup helpers.</summary>
 public static class EnumParse
 {
     /// <summary>

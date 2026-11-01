@@ -1,5 +1,8 @@
 ﻿using System;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides date validation and age calculation helpers.</summary>
 public class DateUtility
 {
     /// <summary>
@@ -51,7 +54,7 @@ public class DateUtility
     {
         bool result = true;
         errorMessage = "";
-        if (!inDate.IsEmpty())
+        if (!string.IsNullOrEmpty(inDate))
         {
             if (DateTime.TryParse(inDate, out DateTime tmp))
             {
@@ -107,4 +110,3 @@ public class DateUtility
         return bReturn;
     }
 }
-

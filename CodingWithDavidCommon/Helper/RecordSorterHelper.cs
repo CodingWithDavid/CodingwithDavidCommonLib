@@ -1,6 +1,9 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides dynamic query ordering and paging helpers.</summary>
 public static class RecordSorterHelper
 {
     /// <summary>
@@ -11,15 +14,22 @@ public static class RecordSorterHelper
     /// <param name="page">page to return</param>
     /// <param name="pageSize">how big is a page</param>
     /// <returns>An order collection of the page asked for</returns>
-    public static IOrderedQueryable<T> PageResult<T>(IQueryable<T> source, int page, int pageSize)
+    public static IQueryable<T> PageResult<T>(IQueryable<T> source, int page, int pageSize)
     {
         if (pageSize == 0)
         {
             pageSize = 25;
         }
+        if (page < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than zero.");
+        }
+        if (pageSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+        }
         int skipNumber = pageSize * (page - 1);
-        var result = source.Skip(skipNumber).Take(pageSize);
-        return (IOrderedQueryable<T>)result;
+        return source.Skip(skipNumber).Take(pageSize);
     }
 
     /// <summary>

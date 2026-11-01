@@ -1,5 +1,8 @@
 ﻿using System.Text;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides text file loading helpers.</summary>
 public static class TextFileHelper
 {
     /// <summary>
