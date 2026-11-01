@@ -1,6 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
+namespace CodingWithDavid.Common;
 
+/// <summary>Provides phone number normalization helpers.</summary>
 public static class PhoneNumberHelper
 {
 

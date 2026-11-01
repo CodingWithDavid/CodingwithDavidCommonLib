@@ -1,5 +1,8 @@
 ﻿using System.Text.Json;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides generic JSON serialization and deserialization helpers.</summary>
 public static class JsonHelper
 {
     /// <summary>
@@ -10,7 +13,7 @@ public static class JsonHelper
     /// <returns>T or a blank T</returns>
     public static T Deserialize<T>(string input) where T : class
     {
-        if (input.IsNotEmpty())
+        if (!string.IsNullOrEmpty(input))
         {
             return JsonSerializer.Deserialize<T>(input)!;
         }

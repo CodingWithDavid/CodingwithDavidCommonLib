@@ -24,11 +24,38 @@ a.	With Visual Code you will need to install the C# extensions
 
 ## What's in the App
 
-This is a .Net 6 class library
+This is a .NET 10 class library. Public APIs are in the `CodingWithDavid.Common`
+namespace.
 
 1. Method Extenstions
 2. Helper Functions
 3. Common Utilities
+
+## Encryption
+
+File encryption uses AES-GCM with a key derived from a caller-provided password.
+Always use the password overloads:
+
+```csharp
+FileFolderHelper.EncryptFile("input.txt", "input.bin", password);
+FileFolderHelper.DecryptFile("input.bin", "output.txt", password);
+```
+
+The legacy two-argument overloads are obsolete and only work when
+`CODINGWITHDAVID_COMMON_ENCRYPTION_PASSWORD` is configured. They are retained
+to make migration possible, but new code should pass the password explicitly.
+
+## API documentation
+
+XML documentation is generated when the library is built. The package is targeted at `net10.0`.
+
+## .NET API overlap
+
+The library intentionally does not wrap APIs that .NET already provides
+directly. The former numeric, parsing, Base64, null/empty string, GUID/date,
+binary conversion, and stream-copy extensions were removed. Use the
+corresponding framework APIs such as `Math.Min`, `Convert`, `Guid.TryParse`,
+`DateTime.TryParse`, `string.IsNullOrEmpty`, `Encoding`, and `Stream.CopyTo`.
 
 ## Problems or Suggestions
 
@@ -41,4 +68,3 @@ This is a .Net 6 class library
 
 - [VS Code](https://code.visualstudio.com)
 - [Visual Studio]( https://visualstudio.microsoft.com/)
-

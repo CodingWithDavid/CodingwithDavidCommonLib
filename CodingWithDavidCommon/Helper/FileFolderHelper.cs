@@ -2,7 +2,10 @@
 using System.Security.Cryptography;
 using System.Text;
 
-static public class FileFolderHelper
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides file and directory management and password-based file encryption helpers.</summary>
+public static class FileFolderHelper
 {
 
     /// <summary>
@@ -71,26 +74,18 @@ static public class FileFolderHelper
     /// <returns>true if it was able to move it, else false</returns>
     static public bool ForceFileCopy(string oldName, string newname)
     {
-        bool result = false;
         try
         {
-            if (oldName.IsEmpty() || newname.IsEmpty())
-                return result;
+            if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newname))
+                return false;
 
-            //copy the file with the new name
-            if (File.Exists(newname))
-            {
-                //delete the old one
-                File.Delete(newname);
-            }
-            File.Copy(oldName, newname);
-            return result;
+            File.Copy(oldName, newname, true);
+            return true;
         }
         catch
         {
-            result = false;
+            return false;
         }
-        return result;
     }
 
     /// <summary>
@@ -102,25 +97,21 @@ static public class FileFolderHelper
     /// <returns>true if it was able to move it, else false</returns>
     static public bool ForceFileMove(string oldName, string newname)
     {
-        bool result = false;
-        if (oldName.IsEmpty() || newname.IsEmpty())
-            return result;
+        if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newname))
+            return false;
 
         try
         {
-            //copy the file with the new name
             if (File.Exists(newname))
-            {
-                //delete the old one
                 File.Delete(newname);
-            }
+
             File.Move(oldName, newname);
+            return true;
         }
         catch
         {
-            result = false;
+            return false;
         }
-        return result;
     }
 
     /// <summary>
@@ -280,61 +271,105 @@ static public class FileFolderHelper
     }
 
     /// <summary>
-    /// This method will create a new output file that is encrypted
+    /// Encrypts a file with AES-GCM using a password-derived key.
     /// </summary>
     /// <param name="inputFile">The file to encrypt</param>
     /// <param name="outputFile">The encrypted file</param>
-    static public void EncryptFile(string inputFile, string outputFile)
+    /// <param name="password">The password used to derive the encryption key</param>
+    public static void EncryptFile(string inputFile, string outputFile, string password)
     {
-        const string skey = "B@tM@n9898";
-#pragma warning disable SYSLIB0022 // Type or member is obsolete
-        using RijndaelManaged aes = new();
-        byte[] key = Encoding.UTF8.GetBytes(skey);
+        ValidateEncryptionInputs(inputFile, outputFile, password);
 
-        byte[] iv = Encoding.UTF8.GetBytes(skey);
+        byte[] plaintext = File.ReadAllBytes(inputFile);
+        byte[] salt = RandomNumberGenerator.GetBytes(16);
+        byte[] nonce = RandomNumberGenerator.GetBytes(12);
+        byte[] key = DeriveKey(password, salt);
+        byte[] ciphertext = new byte[plaintext.Length];
+        byte[] tag = new byte[16];
 
-        using FileStream fsCrypt = new(outputFile, FileMode.Create);
-        using ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
-        using CryptoStream cs = new(fsCrypt, encryptor, CryptoStreamMode.Write);
-        using FileStream fsIn = new(inputFile, FileMode.Open);
-        int data;
-        while ((data = fsIn.ReadByte()) != -1)
+        using (AesGcm aes = new(key, tag.Length))
         {
-            cs.WriteByte((byte)data);
+            aes.Encrypt(nonce, plaintext, ciphertext, tag);
         }
-#pragma warning restore SYSLIB0022 // Type or member is obsolete
+
+        using FileStream output = new(outputFile, FileMode.Create, FileAccess.Write);
+        output.Write(salt);
+        output.Write(nonce);
+        output.Write(tag);
+        output.Write(ciphertext);
     }
 
     /// <summary>
-    /// This method is used to decrypt a file that was encrypted by this utility
+    /// Decrypts a file encrypted by <see cref="EncryptFile(string, string, string)"/>.
     /// </summary>
     /// <param name="inputFile">The encrypted file</param>
     /// <param name="outputFile">The unencrypted file</param>
-    static public void DecryptFile(string inputFile, string outputFile)
+    /// <param name="password">The password used to derive the decryption key</param>
+    public static void DecryptFile(string inputFile, string outputFile, string password)
     {
-        const string password = @"B@tM@n9898";
+        ValidateEncryptionInputs(inputFile, outputFile, password);
 
-        UnicodeEncoding ue = new();
-        byte[] key = ue.GetBytes(password);
+        byte[] encrypted = File.ReadAllBytes(inputFile);
+        const int headerLength = 16 + 12 + 16;
+        if (encrypted.Length < headerLength)
+            throw new InvalidDataException("The encrypted file is not a valid Common Library encrypted file.");
 
-        FileStream fsCrypt = new(inputFile, FileMode.Open);
+        byte[] salt = encrypted[..16];
+        byte[] nonce = encrypted[16..28];
+        byte[] tag = encrypted[28..44];
+        byte[] ciphertext = encrypted[44..];
+        byte[] plaintext = new byte[ciphertext.Length];
+        byte[] key = DeriveKey(password, salt);
 
-#pragma warning disable SYSLIB0022 // Type or member is obsolete
-        RijndaelManaged rmCrypto = new();
-#pragma warning restore SYSLIB0022 // Type or member is obsolete
+        using (AesGcm aes = new(key, tag.Length))
+        {
+            aes.Decrypt(nonce, ciphertext, tag, plaintext);
+        }
 
-        CryptoStream cs = new(fsCrypt,
-            rmCrypto.CreateDecryptor(key, key),
-            CryptoStreamMode.Read);
+        File.WriteAllBytes(outputFile, plaintext);
+    }
 
-        FileStream fsOut = new(outputFile, FileMode.Create);
+    /// <summary>Encrypts a file using the configured legacy environment password.</summary>
+    /// <param name="inputFile">The file to encrypt.</param>
+    /// <param name="outputFile">The encrypted output file.</param>
+    [Obsolete("Pass an explicit password to EncryptFile to avoid relying on an environment variable.")]
+    public static void EncryptFile(string inputFile, string outputFile)
+    {
+        EncryptFile(inputFile, outputFile, GetEnvironmentPassword());
+    }
 
-        int data;
-        while ((data = cs.ReadByte()) != -1)
-            fsOut.WriteByte((byte)data);
+    /// <summary>Decrypts a file using the configured legacy environment password.</summary>
+    /// <param name="inputFile">The encrypted file.</param>
+    /// <param name="outputFile">The decrypted output file.</param>
+    [Obsolete("Pass an explicit password to DecryptFile to avoid relying on an environment variable.")]
+    public static void DecryptFile(string inputFile, string outputFile)
+    {
+        DecryptFile(inputFile, outputFile, GetEnvironmentPassword());
+    }
 
-        fsOut.Close();
-        cs.Close();
-        fsCrypt.Close();
+    private static void ValidateEncryptionInputs(string inputFile, string outputFile, string password)
+    {
+        if (string.IsNullOrEmpty(inputFile))
+            throw new ArgumentException("An input file is required.", nameof(inputFile));
+        if (string.IsNullOrEmpty(outputFile))
+            throw new ArgumentException("An output file is required.", nameof(outputFile));
+        if (string.IsNullOrEmpty(password))
+            throw new ArgumentException("A password is required.", nameof(password));
+        if (!File.Exists(inputFile))
+            throw new FileNotFoundException("The input file was not found.", inputFile);
+    }
+
+    private static byte[] DeriveKey(string password, byte[] salt)
+    {
+        return Rfc2898DeriveBytes.Pbkdf2(password, salt, 100_000, HashAlgorithmName.SHA256, 32);
+    }
+
+    private static string GetEnvironmentPassword()
+    {
+        string? password = Environment.GetEnvironmentVariable("CODINGWITHDAVID_COMMON_ENCRYPTION_PASSWORD");
+        return !string.IsNullOrEmpty(password)
+            ? password
+            : throw new InvalidOperationException(
+                "Set CODINGWITHDAVID_COMMON_ENCRYPTION_PASSWORD or pass an explicit password.");
     }
 }

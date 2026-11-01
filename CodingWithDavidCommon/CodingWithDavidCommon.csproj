@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.0.0.0</FileVersion>
+    <AssemblyVersion>10.0.0.0</AssemblyVersion>
+    <FileVersion>10.0.0.0</FileVersion>
     <Description>Common methods used in Blog Projects</Description>
     <Copyright>@2022 CosingWithDavid</Copyright>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageIcon>favicon-16x16.png</PackageIcon>
     <RepositoryType>GitHub</RepositoryType>
   </PropertyGroup>

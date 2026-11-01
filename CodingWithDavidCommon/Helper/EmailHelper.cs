@@ -3,7 +3,10 @@ using System.Net.Mail;
 using System.Text;
 using System.Text.RegularExpressions;
 
-static public class EmailHelper
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides synchronous SMTP email helpers and email address validation.</summary>
+public static class EmailHelper
 {
 
     /// <summary>
@@ -12,6 +15,11 @@ static public class EmailHelper
     /// <param name="message">the body of the email</param>
     /// <param name="toEmail">who is the email going to</param>
     /// <param name="subject">subject of the email</param>
+    /// <param name="smtpName">SMTP server name.</param>
+    /// <param name="smtpUser">SMTP user name.</param>
+    /// <param name="smtpPW">SMTP password.</param>
+    /// <param name="fromWho">Sender email address.</param>
+    /// <param name="smtpPort">SMTP server port.</param>
     /// <returns>true on success or false on an error</returns>
     public static bool SendEmail(string message, string toEmail, string subject, string smtpName, string smtpUser, string smtpPW, string fromWho, int smtpPort = 587)
     {
@@ -44,6 +52,10 @@ static public class EmailHelper
     /// <param name="emails">comma delimited list of who to send the email to</param>
     /// <param name="isBodyHtml">true if the body of the email is HTML</param>
     /// <param name="from">who is the email from</param>
+    /// <param name="smtpName">SMTP server name.</param>
+    /// <param name="smtpUser">SMTP user name.</param>
+    /// <param name="smtpPW">SMTP password.</param>
+    /// <param name="smtpPort">SMTP server port.</param>
     /// <returns></returns>
     static public void SendEmail(string subject, string body, string emails, bool isBodyHtml, string from, string smtpName, string smtpUser, string smtpPW, int smtpPort = 587)
     {
@@ -60,6 +72,10 @@ static public class EmailHelper
     /// <param name="bcemails">comma delimited list of who to blind copy the email to</param>
     /// <param name="isBodyHtml">true if the body of the email is HTML</param>
     /// <param name="from">who is the email from </param>
+    /// <param name="smtpName">SMTP server name.</param>
+    /// <param name="smtpUser">SMTP user name.</param>
+    /// <param name="smtpPW">SMTP password.</param>
+    /// <param name="smtpPort">SMTP server port.</param>
     /// <returns>true if the email was sent, else false</returns>
     static public void SendEmail(string subject, string body, string emails, string ccemails, string bcemails, bool isBodyHtml, string from, string smtpName, string smtpUser, string smtpPW, int smtpPort = 587)
     {
@@ -68,11 +84,11 @@ static public class EmailHelper
             From = new MailAddress(from)
         };
 
-        if (!emails.IsEmpty())
+        if (!string.IsNullOrEmpty(emails))
             oMsg.To.Add(emails);
-        if (!ccemails.IsEmpty())
+        if (!string.IsNullOrEmpty(ccemails))
             oMsg.CC.Add(ccemails);
-        if (!bcemails.IsEmpty())
+        if (!string.IsNullOrEmpty(bcemails))
             oMsg.Bcc.Add(bcemails);
 
         oMsg.Subject = subject;
@@ -96,6 +112,8 @@ static public class EmailHelper
     /// <param name="emails">comma delimited list of who to send the email to</param>
     /// <param name="ccemails">comma delimited list of who carbon copy the email to</param>
     /// <param name="from">who is the email from </param>
+    /// <param name="smtpServer">SMTP server name.</param>
+    /// <param name="port">SMTP server port.</param>
     /// <returns>true if the email was sent, else false</returns>
     static public void SendHTMLEmail(string subject, string body, string emails, string ccemails, string from, string smtpServer, int port)
     {
@@ -104,9 +122,9 @@ static public class EmailHelper
             From = new MailAddress(from)
         };
 
-        if (!emails.IsEmpty())
+        if (!string.IsNullOrEmpty(emails))
             oMsg.To.Add(emails);
-        if (!ccemails.IsEmpty())
+        if (!string.IsNullOrEmpty(ccemails))
             oMsg.CC.Add(ccemails);
 
         oMsg.Subject = subject;
@@ -128,6 +146,10 @@ static public class EmailHelper
     /// <param name="emails">comma delimited list of who to send the email to</param>
     /// <param name="ccemails">comma delimited list of who carbon copy the email to</param>
     /// <param name="from">who is the email from </param>
+    /// <param name="smtpServer">SMTP server name.</param>
+    /// <param name="port">SMTP server port.</param>
+    /// <param name="userName">SMTP user name.</param>
+    /// <param name="password">SMTP password.</param>
     /// <returns>true if the email was sent, else false</returns>
     static public void SendHTMLEmail(string subject, string body, string emails, string ccemails, string from, string smtpServer, int port, string userName, string password)
     {
@@ -136,9 +158,9 @@ static public class EmailHelper
             From = new MailAddress(from)
         };
 
-        if (!emails.IsEmpty())
+        if (!string.IsNullOrEmpty(emails))
             oMsg.To.Add(emails);
-        if (!ccemails.IsEmpty())
+        if (!string.IsNullOrEmpty(ccemails))
             oMsg.CC.Add(ccemails);
 
         oMsg.Subject = subject;

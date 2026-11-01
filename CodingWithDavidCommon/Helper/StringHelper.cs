@@ -1,6 +1,9 @@
 ﻿using System.IO.Compression;
 using System.Text;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides string, encoding, and compression helpers.</summary>
 public static class StringHelper
 {
     /// <summary>
@@ -118,57 +121,46 @@ public static class StringHelper
         return result;
     }
 
-    static public byte[] GetBytes(string str)
+    /// <summary>
+    /// Compresses a string and returns the compressed bytes as Base64 text.
+    /// </summary>
+    /// <param name="str">The text to compress.</param>
+    /// <returns>Base64-encoded GZip data.</returns>
+    public static string ZipStr(string str)
     {
-        byte[] bytes = new byte[str.Length * sizeof(char)];
-        System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
-        return bytes;
-    }
-
-    static public string GetString(byte[] bytes)
-    {
-        char[] chars = new char[bytes.Length / sizeof(char)];
-        System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
-        return new string(chars);
-    }
-
-    static public string ZipStr(string str)
-    {
-        string result = str;
         var bytes = Encoding.UTF8.GetBytes(str);
 
         using var msi = new MemoryStream(bytes);
         using var mso = new MemoryStream();
         using (var gs = new GZipStream(mso, CompressionMode.Compress))
         {
-            //msi.CopyTo(gs);
-            CopyTo(msi, gs);
+            msi.CopyTo(gs);
         }
-        Encoding.Default.GetString(mso.ToArray());
-        return result;
+        return Convert.ToBase64String(mso.ToArray());
     }
 
-    public static void CopyTo(Stream src, Stream dest)
-    {
-        byte[] bytes = new byte[4096];
-
-        int cnt;
-
-        while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
-        {
-            dest.Write(bytes, 0, cnt);
-        }
-    }
-
+    /// <summary>Decompresses GZip bytes as UTF-8 text.</summary>
+    /// <param name="bytes">The compressed bytes.</param>
+    /// <returns>The decompressed text.</returns>
     public static string Unzip(byte[] bytes)
     {
         using var msi = new MemoryStream(bytes);
         using var mso = new MemoryStream();
         using (var gs = new GZipStream(msi, CompressionMode.Decompress))
         {
-            CopyTo(gs, mso);
+            gs.CopyTo(mso);
         }
 
         return Encoding.UTF8.GetString(mso.ToArray());
+    }
+
+    /// <summary>
+    /// Decompresses Base64-encoded GZip text produced by <see cref="ZipStr"/>.
+    /// </summary>
+    /// <param name="compressed">Base64-encoded GZip data.</param>
+    /// <returns>The decompressed text.</returns>
+    public static string Unzip(string compressed)
+    {
+        return Unzip(Convert.FromBase64String(compressed));
     }
 }

@@ -1,5 +1,8 @@
 using System.Text;
 
+namespace CodingWithDavid.Common;
+
+/// <summary>Provides stream and file conversion helpers.</summary>
 public static class StreamUtils
 {
     /// <summary>

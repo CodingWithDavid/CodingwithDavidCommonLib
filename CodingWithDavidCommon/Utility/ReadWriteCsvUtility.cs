@@ -1,13 +1,16 @@
 ﻿using System.Text;
 
+namespace CodingWithDavid.Common;
 
-public class ReadWriteCsvUtility
+/// <summary>Provides lightweight CSV row, reader, and writer types.</summary>
+public static class ReadWriteCsvUtility
 {
     /// <summary>
     /// Class to store one CSV row
     /// </summary>
     public class CsvRow : List<string>
     {
+        /// <summary>Gets or sets the original or generated CSV line text.</summary>
         public string LineText { get; set; } = String.Empty;
     }
 
@@ -16,9 +19,20 @@ public class ReadWriteCsvUtility
     /// </summary>
     public class CsvFileWriter : StreamWriter
     {
+        /// <summary>Initializes a writer over a stream.</summary>
+        /// <param name="stream">The destination stream.</param>
         public CsvFileWriter(Stream stream) : base(stream)
         {
         }
+
+        /// <summary>Initializes a writer over a stream.</summary>
+        /// <param name="stream">The destination stream.</param>
+        /// <param name="leaveOpen">Whether to leave the stream open when disposed.</param>
+        public CsvFileWriter(Stream stream, bool leaveOpen) : base(stream, Encoding.UTF8, 1024, leaveOpen)
+        {
+        }
+        /// <summary>Initializes a writer for a file.</summary>
+        /// <param name="filename">The destination file name.</param>
         public CsvFileWriter(string filename) : base(filename)
         {
         }
@@ -62,10 +76,21 @@ public class ReadWriteCsvUtility
     /// </summary>
     public class CsvFileReader : StreamReader
     {
+        /// <summary>Initializes a reader over a stream.</summary>
+        /// <param name="stream">The source stream.</param>
         public CsvFileReader(Stream stream) : base(stream)
         {
         }
 
+        /// <summary>Initializes a reader over a stream.</summary>
+        /// <param name="stream">The source stream.</param>
+        /// <param name="leaveOpen">Whether to leave the stream open when disposed.</param>
+        public CsvFileReader(Stream stream, bool leaveOpen) : base(stream, Encoding.UTF8, true, 1024, leaveOpen)
+        {
+        }
+
+        /// <summary>Initializes a reader for a file.</summary>
+        /// <param name="filename">The source file name.</param>
         public CsvFileReader(string filename) : base(filename)
         {
         }
@@ -73,8 +98,8 @@ public class ReadWriteCsvUtility
         /// <summary>
         /// Reads a row of data from a CSV file
         /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
+        /// <param name="row">The row to populate.</param>
+        /// <returns><see langword="true"/> when a row was read.</returns>
         public bool ReadRow(CsvRow row)
         {
             if (row != null)
